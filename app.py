@@ -47,8 +47,13 @@ def search():
         lyrics = True
     if songdata_ and songdata_.lower() != 'true':
         songdata = False
+    try:
+        count = int(request.args.get('n', 15))
+    except (TypeError, ValueError):
+        count = 15
+    count = max(1, min(count, 40))
     if query:
-        return jsonify(jiosaavn.search_for_song(query, lyrics, songdata))
+        return jsonify(jiosaavn.search_for_song(query, lyrics, songdata, count))
     else:
         error = {
             "status": False,
