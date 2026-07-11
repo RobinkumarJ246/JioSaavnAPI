@@ -2,6 +2,7 @@ from flask import Flask, request, redirect, jsonify, json
 import time
 import jiosaavn
 import os
+import requests
 from traceback import print_exc
 from flask_cors import CORS
 
@@ -13,6 +14,26 @@ CORS(app)
 @app.route('/')
 def home():
     return redirect("https://cyberboysumanjay.github.io/JioSaavnAPI/")
+
+
+@app.route('/ping/')
+def ping():
+    return jsonify({"status": True, "message": "pong"})
+
+
+@app.route('/health/')
+def health():
+    try:
+        upstream_ok = requests.get(
+            "https://www.jiosaavn.com", timeout=5).ok
+    except requests.RequestException:
+        upstream_ok = False
+
+    response = {
+        "status": True,
+        "upstream_reachable": upstream_ok
+    }
+    return jsonify(response), 200 if upstream_ok else 503
 
 
 @app.route('/song/')
@@ -152,7 +173,7 @@ def result():
             songs = jiosaavn.get_album(id, lyrics)
             return jsonify(songs)
 
-        elif '/playlist/' or '/featured/' in query:
+        elif '/playlist/' in query or '/featured/' in query:
             print("Playlist")
             id = jiosaavn.get_playlist_id(query)
             songs = jiosaavn.get_playlist(id, lyrics)
